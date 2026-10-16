@@ -9,6 +9,7 @@ jobs:
   build-windows:
     name: Build Windows x64
     runs-on: windows-2022
+    timeout-minutes: 360
 
     defaults:
       run:
@@ -18,6 +19,7 @@ jobs:
       - name: Prepare directories
         run: |
           mkdir %userprofile%\TBuild\Libraries
+          mkdir %userprofile%\TBuild\ThirdParty
           mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
           echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
           echo LibrariesPath=%GITHUB_WORKSPACE%\TBuild\Libraries\win64>>%GITHUB_ENV%
@@ -25,29 +27,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          path: TBuild/tdesktop
           submodules: recursive
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Set up MSVC Dev Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Install build tools
         run: |
           choco install ninja nasm -y
 
+      - name: Cache ThirdParty and Libraries
+        id: cache-tbuild
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.TBUILD }}/Libraries
+            ${{ env.TBUILD }}/ThirdParty
+          key: ${{ runner.os }}-tbuild-${{ hashFiles('TBuild/tdesktop/Telegram/build/prepare/**') }}
+          restore-keys: |
+            ${{ runner.os }}-tbuild-
+
+      - name: Prepare Libraries
+        run: |
+          cd %TBUILD%\tdesktop
+          call Telegram\build\prepare\win.bat
+
+      - name: Configure CMake
+        run: |
+          cd %TBUILD%\tdesktop\Telegram
+          call configure.bat x64 -D TDESKTOP_API_ID=2040 -D TDESKTOP_API_HASH=b18441a1ff607e10a989891a5462e627 -D TDESKTOP_API_TEST=ON
+
       - name: Build Telegram Desktop
         run: |
-          echo Building Telegram Desktop...
-          cd Telegram
-          call configure.bat x64 -D TDESKTOP_API_TEST=ON
-          cmake --build ..\out --config Release --parallel
+          cmake --build %TBUILD%\tdesktop\out --config Release --parallel
 
       - name: Upload Telegram Binary
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-Windows-x64
           path: |
-            out/Release/Telegram.exe
-            out/Release/Updater.exe
+            ${{ env.TBUILD }}/tdesktop/out/Release/Telegram.exe
+            ${{ env.TBUILD }}/tdesktop/out/Release/Updater.exe
           if-no-files-found: warn
