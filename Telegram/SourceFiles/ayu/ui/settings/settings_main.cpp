@@ -27,8 +27,11 @@
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/labels.h"
 #include "ui/wrap/vertical_layout.h"
-#include "window/window_session_controller.h"
 #include "window/window_session_controller_link_info.h"
+#include "ui/controls/userpic_button.h"
+#include "data/data_user.h"
+#include "data/data_session.h"
+#include "styles/style_info.h"
 
 #include <QDesktopServices>
 
@@ -40,27 +43,15 @@ namespace {
 
 void BuildLogo(SectionBuilder &builder) {
 	builder.add([](const WidgetContext &ctx) -> SectionBuilder::WidgetToAdd {
-		auto logo = object_ptr<Ui::RpWidget>(ctx.container);
-		const auto logoRaw = logo.data();
-		logoRaw->resize(
-			QSize(st::settingsCloudPasswordIconSize,
-				st::settingsCloudPasswordIconSize));
-		logoRaw->setNaturalWidth(st::settingsCloudPasswordIconSize);
-		logoRaw->paintRequest(
-		) | rpl::on_next([=] {
-			auto p = QPainter(logoRaw);
-			const auto image = AyuAssets::currentAppLogoPad();
-			if (!image.isNull()) {
-				const auto size = st::settingsCloudPasswordIconSize;
-				const auto scaled = image.scaled(
-					size * style::DevicePixelRatio(),
-					size * style::DevicePixelRatio(),
-					Qt::KeepAspectRatio,
-					Qt::SmoothTransformation);
-				p.drawImage(QRect(0, 0, size, size), scaled);
-			}
-		}, logoRaw->lifetime());
-		return { .widget = std::move(logo), .align = style::al_top };
+		const auto user = ctx.controller->session().user();
+		auto button = object_ptr<Ui::UserpicButton>(
+			ctx.container,
+			ctx.controller,
+			user,
+			Ui::UserpicButton::Role::OpenPhoto,
+			Ui::UserpicButton::Source::PeerPhoto,
+			st::infoProfileCover.photo);
+		return { .widget = std::move(button), .align = style::al_top };
 	});
 }
 
@@ -70,7 +61,7 @@ void BuildVersionInfo(SectionBuilder &builder) {
 			.widget = object_ptr<Ui::FlatLabel>(
 				ctx.container,
 				rpl::single(
-					QString("AyuGram Desktop v")
+					QString("Telegram Desktop v")
 					+ QString::fromLatin1(AppVersionStr)),
 				st::boxTitle),
 			.align = style::al_top,
@@ -83,7 +74,7 @@ void BuildVersionInfo(SectionBuilder &builder) {
 		return {
 			.widget = object_ptr<Ui::FlatLabel>(
 				ctx.container,
-				tr::ayu_SettingsDescription(),
+				rpl::single(QString::fromUtf8("Дополнительные настройки")),
 				st::centeredBoxLabel),
 			.align = style::al_top,
 		};
@@ -101,7 +92,7 @@ void BuildCategories(SectionBuilder &builder) {
 	builder.addSubsectionTitle(tr::ayu_CategoriesHeader());
 
 	builder.addSectionButton({
-		.title = rpl::single(QString("AyuGram")),
+		.title = rpl::single(QString::fromUtf8("Функции модификации")),
 		.targetSection = AyuGhost::Id(),
 		.icon = { &st::menuIconGroupReactions },
 	});

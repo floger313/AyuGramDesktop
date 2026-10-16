@@ -490,10 +490,21 @@ void PaintRow(
 			* -2;
 		swipeMirrored = !context.quickActionContext->data.inverted;
 	}
-	if (swipeTranslation) {
-		p.translate(swipeMirrored ? swipeTranslation : -swipeTranslation, 0);
+	if (context.active || context.selected) {
+		p.fillRect(geometry, context.currentBg);
+		const auto rowPad = 6;
+		const auto rowRadius = 12.;
+		const auto activeRect = QRectF(
+			geometry.x() + rowPad,
+			geometry.y() + 2,
+			geometry.width() - (rowPad * 2),
+			geometry.height() - 4);
+		p.setPen(Qt::NoPen);
+		p.setBrush(bg);
+		p.drawRoundedRect(activeRect, rowRadius, rowRadius);
+	} else {
+		p.fillRect(geometry, bg);
 	}
-	p.fillRect(geometry, bg);
 	if (!(flags & Flag::TopicJumpRipple)) {
 		auto ripple = context.active
 			? st::dialogsRippleBgActive
