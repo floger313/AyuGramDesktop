@@ -16,6 +16,13 @@ jobs:
         shell: cmd
 
     steps:
+      - name: Configure Pagefile on Runner
+        uses: al-cheb/configure-pagefile-action@v1.5
+        with:
+          minimum-size: 32GB
+          maximum-size: 32GB
+          disk-root: "C:"
+
       - name: Prepare directories
         run: |
           mkdir %userprofile%\TBuild\Libraries
@@ -45,9 +52,9 @@ jobs:
         run: |
           choco install ninja nasm -y
 
-      - name: Cache ThirdParty and Libraries
+      - name: Restore ThirdParty and Libraries Cache
         id: cache-tbuild
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             ${{ env.TBUILD }}/Libraries
@@ -61,6 +68,15 @@ jobs:
           cd %TBUILD%\tdesktop
           call Telegram\build\prepare\win.bat
 
+      - name: Save ThirdParty and Libraries Cache
+        if: steps.cache-tbuild.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.TBUILD }}/Libraries
+            ${{ env.TBUILD }}/ThirdParty
+          key: ${{ steps.cache-tbuild.outputs.cache-primary-key || format('{0}-tbuild-{1}', runner.os, hashFiles('TBuild/tdesktop/Telegram/build/prepare/**')) }}
+
       - name: Configure CMake
         run: |
           cd %TBUILD%\tdesktop\Telegram
@@ -68,7 +84,7 @@ jobs:
 
       - name: Build Telegram Desktop
         run: |
-          cmake --build %TBUILD%\tdesktop\out --config Release --parallel
+          cmake --build %TBUILD%\tdesktop\out --config Release --parallel 2 -- /p:PreferredToolArchitecture=x64
 
       - name: Upload Telegram Binary
         uses: actions/upload-artifact@v4
