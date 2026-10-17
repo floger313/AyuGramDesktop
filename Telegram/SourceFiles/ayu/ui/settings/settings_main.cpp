@@ -27,7 +27,8 @@
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/labels.h"
 #include "ui/wrap/vertical_layout.h"
-#include "window/window_session_controller_link_info.h"
+#include "window/window_session_controller.h"
+#include "main/main_session.h"
 #include "ui/controls/userpic_button.h"
 #include "data/data_user.h"
 #include "data/data_session.h"
@@ -50,8 +51,11 @@ void BuildLogo(SectionBuilder &builder) {
 			user,
 			Ui::UserpicButton::Role::OpenPhoto,
 			Ui::UserpicButton::Source::PeerPhoto,
-			st::infoProfileCover.photo);
-		return { .widget = std::move(button), .align = style::al_top };
+			st::settingsInfoPhoto);
+		return {
+			.widget = object_ptr<Ui::RpWidget>(std::move(button)),
+			.align = style::al_top,
+		};
 	});
 }
 
