@@ -2738,14 +2738,14 @@ void ComposeControls::init() {
 	}
 	_tabbedSelectorToggle->setAccessibleName(tr::lng_emoji_sticker_gif(tr::now));
 
-	_myUserpic = Ui::CreateChild<Ui::RpWidget>(_wrap.get());
+	_myUserpic = base::make_unique_q<Ui::RpWidget>(_wrap.get());
 	_myUserpic->resize(28, 28);
 	_myUserpic->paintRequest(
 	) | rpl::on_next([=] {
-		auto p = QPainter(_myUserpic);
+		auto p = QPainter(_myUserpic.get());
 		p.setRenderHint(QPainter::Antialiasing);
 		if (const auto user = session().user()) {
-			user->paintUserpicLeft(p, 0, 0, 28, 28);
+			user->paintUserpicLeft(p, _myUserpicView, 0, 0, 28, 28);
 		}
 	}, _myUserpic->lifetime());
 	_myUserpic->show();
