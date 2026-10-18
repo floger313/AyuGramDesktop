@@ -418,7 +418,11 @@ void FieldHeader::init() {
 	) | rpl::on_next([=] {
 		Painter p(this);
 		p.setInactive(_show->paused(Window::GifPauseReason::Any));
-		p.fillRect(rect(), st::historyComposeAreaBg);
+		if (displayedReplyingToMessage().replying()) {
+			p.fillRect(rect(), QColor(18, 21, 24));
+		} else {
+			p.fillRect(rect(), st::historyComposeAreaBg);
+		}
 
 		const auto position = st::historyReplyIconPosition;
 		if (_suggestOptions) {
@@ -2734,6 +2738,18 @@ void ComposeControls::init() {
 	}
 	_tabbedSelectorToggle->setAccessibleName(tr::lng_emoji_sticker_gif(tr::now));
 
+	_myUserpic = Ui::CreateChild<Ui::RpWidget>(_wrap.get());
+	_myUserpic->resize(28, 28);
+	_myUserpic->paintRequest(
+	) | rpl::on_next([=] {
+		auto p = QPainter(_myUserpic);
+		p.setRenderHint(QPainter::Antialiasing);
+		if (const auto user = session().user()) {
+			user->paintUserpicLeft(p, 0, 0, 28, 28);
+		}
+	}, _myUserpic->lifetime());
+	_myUserpic->show();
+
 	initField();
 	initTabbedSelector();
 	initSendButton();
@@ -4960,12 +4976,15 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 		&& !_commentsShown->isHidden();
 	const auto giftToUser = _giftToUser
 		&& !_giftToUser->isHidden();
+	constexpr auto kLiftBottom = 4;
+	const auto userpicWidth = (_myUserpic && !_myUserpic->isHidden()) ? (_myUserpic->width() + 6) : 0;
 	const auto fieldWidth = size.width()
 		- (commentsShown
 			? (_commentsShown->width() + _st.commentsSkip)
 			: 0)
 		- (((_attachToggle && settings.showAttachButtonInMessageField()) || _sendAs) ? _st.padding.left() : _st.fieldLeft)
 		- (_attachToggle && settings.showAttachButtonInMessageField() ? _attachToggle->width() : 0)
+		- userpicWidth
 		- (_botMenu.button
 			? (st::historyBotMenuSkip + _botMenu.button->width())
 			: 0)
@@ -5013,7 +5032,7 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 		}
 	}
 
-	const auto buttonsTop = size.height() - _st.attach.height;
+	const auto buttonsTop = size.height() - _st.attach.height - kLiftBottom;
 
 	auto left = 0;
 	if (commentsShown) {
@@ -5033,12 +5052,17 @@ void ComposeControls::updateControlsGeometry(QSize size) {
 		_attachToggle->moveToLeft(left, buttonsTop);
 		left += _attachToggle->width();
 	}
+	if (_myUserpic && !_myUserpic->isHidden()) {
+		const auto userpicTop = buttonsTop + (_st.attach.height - _myUserpic->height()) / 2;
+		_myUserpic->moveToLeft(left + 2, userpicTop);
+		left += _myUserpic->width() + 6;
+	}
 	if (_sendAs) {
 		_sendAs->moveToLeft(left, buttonsTop);
 		left += _sendAs->width();
 	}
 	const auto fieldHeight = composeFieldHeight();
-	const auto fieldTop = size.height() - _st.padding.bottom() - fieldHeight;
+	const auto fieldTop = size.height() - _st.padding.bottom() - fieldHeight - kLiftBottom;
 	_field->moveToLeft(left, fieldTop);
 	if (_richDraftPreview) {
 		_richDraftPreview->moveToLeft(left, fieldTop);

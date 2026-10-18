@@ -194,7 +194,6 @@ const auto kMeta = BuildHelper({
 	builder.addSkip();
 	BuildVersionInfo(builder);
 	BuildCategories(builder);
-	BuildLinks(builder);
 });
 
 } // namespace

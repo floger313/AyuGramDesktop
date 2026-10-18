@@ -869,11 +869,32 @@ void Reply::paint(
 			inBubble,
 			useColorIndex ? colorIndexPlusOne : 0)];
 	const auto rippleColor = cache->bg;
-	if (!inBubble) {
+	if (inBubble) {
+		cache->bg = QColor(18, 21, 24, 235);
+		cache->bg2 = cache->bg;
+	} else {
 		cache->bg = QColor(0, 0, 0, 0);
 	}
 	Ui::Text::ValidateQuotePaintCache(*cache, quoteSt);
 	Ui::Text::FillQuotePaint(p, rect, *cache, quoteSt);
+
+	if (inBubble) {
+		// Draw zebra / diagonal striped outline on the left bar
+		const auto outlineWidth = quoteSt.outline;
+		const auto radius = quoteSt.radius;
+		const auto barRect = QRect(rect.x(), rect.y(), outlineWidth, rect.height());
+		p.save();
+		auto clipPath = QPainterPath();
+		clipPath.addRoundedRect(rect, radius, radius);
+		p.setClipPath(clipPath);
+		p.fillRect(barRect, QColor(35, 40, 45));
+		auto penZebra = QPen(QColor(180, 185, 190), 2);
+		p.setPen(penZebra);
+		for (int offset = -rect.height(); offset < rect.height() + outlineWidth; offset += 6) {
+			p.drawLine(rect.x() - 2, rect.y() + offset + outlineWidth + 2, rect.x() + outlineWidth + 2, rect.y() + offset);
+		}
+		p.restore();
+	}
 	const auto &settings = AyuSettings::getInstance();
 	if (!settings.simpleQuotesAndReplies() && backgroundEmojiData) {
 		ValidateBackgroundEmoji(

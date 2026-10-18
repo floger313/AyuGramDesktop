@@ -296,6 +296,10 @@ void PaintSolidBubble(QPainter &p, const SimpleBubble &args) {
 		? QPoint(0, tail.height())
 		: QPoint(tail.width(), tail.height());
 
+	const auto wasOpacity = p.opacity();
+	// iOS Liquid Glass translucent effect
+	p.setOpacity(wasOpacity * 0.88);
+
 	PaintBubbleGeneric(args, [&](const QRect &rect) {
 		p.fillRect(rect, bg);
 	}, [&](const QRect &rect) {
@@ -309,6 +313,8 @@ void PaintSolidBubble(QPainter &p, const SimpleBubble &args) {
 		tail.paint(p, bottomPosition - tailShift, args.outerWidth);
 		return tail.width();
 	});
+
+	p.setOpacity(wasOpacity);
 }
 
 } // namespace

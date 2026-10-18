@@ -564,6 +564,7 @@ private:
 	rpl::variable<bool> _commentsShownHidden;
 	Ui::RpWidget *_commentsShownNewDot = nullptr;
 	Ui::IconButton *_attachToggle = nullptr;
+	object_ptr<Ui::RpWidget> _myUserpic = { nullptr };
 	Ui::AbstractButton *_starsReaction = nullptr;
 	std::vector<std::unique_ptr<Ui::ReactionFlyAnimation>> _starSendEffects;
 	std::unique_ptr<Ui::RpWidget> _starSendEffectsCanvas;
