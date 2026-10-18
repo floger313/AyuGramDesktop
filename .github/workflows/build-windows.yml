@@ -91,6 +91,5 @@ jobs:
         with:
           name: Telegram-Windows-x64
           path: |
-            ${{ env.TBUILD }}/tdesktop/out/Release/Telegram.exe
-            ${{ env.TBUILD }}/tdesktop/out/Release/Updater.exe
-          if-no-files-found: warn
+            ${{ env.TBUILD }}/tdesktop/out/Release/*.exe
+          if-no-files-found: error
