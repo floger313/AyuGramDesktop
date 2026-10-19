@@ -913,9 +913,8 @@ void Reply::paint(
 				backgroundEmojiData->firstGiftFrame);
 		}
 	}
-	if (!inBubble) {
-		cache->bg = rippleColor;
-	}
+	cache->bg = rippleColor;
+	cache->bg2 = rippleColor;
 
 	if (_ripple.animation) {
 		_ripple.lastPaintedPoint = inBubble ? QPoint(x, y) : QPoint();
