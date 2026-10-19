@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/controls/compose_controls_common.h"
 #include "ui/round_rect.h"
 #include "ui/rp_widget.h"
+#include "ui/userpic_view.h"
 #include "ui/effects/animations.h"
 #include "ui/widgets/fields/input_field.h"
 
